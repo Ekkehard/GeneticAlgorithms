@@ -166,14 +166,41 @@
 # @par
 #
 # To tackle a problem with this class, the first thing to do is think of an
-# appropriate coding of the parameters to be optimized in genes.
+# appropriate coding scheme to map the parameters to be optimized onto genes.
+# The simplest way to do that is certainly to just use the parameters themselves
+# as floating point values, which is easily accomplished by selecting the allele
+# alphabet as type float.  If there are more than one parameter, the others can
+# be arranged in the same chromosome or each as its own chromosome.  The latter
+# method excludes the possibility of creating offspring using the crossover
+# genetic procedure between the parameters in different chromosomes.
 #
-# It should be noted that the floating point chromosome algorithm with its
-# default values (which are selected according to [2]) usually exhibits
-# inferior performance when compared to the biallelic type chromosomes, and
-# the former require a lot more iterations to find the extrema "in most
-# cases."  This is well understood and attributed to the (practically)
-# infinite size of the alphabet in the case of floating point alleles (see [1]).
+# It can be shown (see [1]) that smaller alphabets in general exhibit better
+# performance than bigger ones, which renders the use of floating point numbers
+# as the alphabet a less than optimal choice in most cases, as there are
+# infinitely many alleles in the alphabet of real numbers in [0 .. 1].  It is
+# therefore usually a better idea to use bits as individual genes and interpret
+# them as bits of integers, which then can be converted to floating point
+# numbers in [0 .. 1] in the decoding function if the application requires that.
+# In that case it is usually a good idea to use separate chromosomes for
+# different parameters to shield them from the effects of crossover between
+# different parameters.
+#
+# Lastly, the method of partially matched crossover is provided for cases when
+# the allele alphabet consists of integer sequences and the individual genomes
+# in a population are permutations are permutations of each other.  A famous
+# application for this type is the Traveling Salesman Problem (TSP) where the
+# sequence of integers in each genome represents the sequence the salesman would
+# visit the cities in on his tour.  However, to be more precise, what the GAs
+# can solve in this case is the "blind" TSP, i.e. a case where the algorithm is
+# unaware of the graph of cities or their distance matrix.  This is not a very
+# interesting case mathematically, as the only hope for success is then dumb
+# luck, which is, as we have seen, the area where GAs excel.  However, they do
+# so only within a relatively narrow limit.  If the sequence length (the number
+# of cities) becomes much larger than 20, GAs will perform poorly.
+#
+# The constructor of the class GeneticAlgorithms provides a number of sensible
+# defaults for most of the parameters that should probably be tried first unless
+# there are good reasons not to use them.
 #
 # The unit test included in this file can serve as an example of how to use this
 # class.
@@ -282,7 +309,7 @@ class Genotype( object ):
                 for j in range( self.chromosomeLengths[i] ):
                     retstr += str( self.__genome[i][j,0] )
                     retstr += " "
-                retstrn = retstr[:-1]
+                retstr = retstr[:-1]
                 retstr += ", "
         elif self.haploid:
             for i in range( self.numberChromosomes ):
@@ -403,8 +430,8 @@ class GeneticAlgorithms( object ):
         @brief Class derived from Thread that returns the return value of the
                threaded target function in the return value of join().
         """
-        def __init__( self, group=None, target=None, name=None,
-                    args=(), kwargs={}, Verbose=None ):
+        def __init__( self, group=None, target=None, name=None, Verbose=None,
+                      args=(), kwargs={} ):
             """!
             @brief Constructor - calls parent's constructor and initializes
                    return value.
@@ -447,7 +474,7 @@ class GeneticAlgorithms( object ):
         real value in [0 .. 1] instead.  The same is true for a single
         valued chromosome.
         @param genotype instance of class Genotype
-        @retrun tuple consisting of either a numpy array or a single real value
+        @return tuple consisting of either a numpy array or a single real value
         """
 
         if genotype.alphabet is float or genotype.pmx:
@@ -499,21 +526,21 @@ class GeneticAlgorithms( object ):
 
     def __init__( self,
                   objectiveFunction,
-                  decoder,
                   numberChromosomes,
                   chromosomeLengths,
                   populationSize,
-                  populationGrowth=1.0,
-                  overpopulation=1.3,
-                  chromosomeSets=1,
+                  decoder=None,
+                  alleleAlphabet=None,
                   pmx=False,
                   pCrossover=None,
                   pMutation=None,
                   pInversion=None,
+                  populationGrowth=1.0,
+                  overpopulation=1.3,
+                  chromosomeSets=1,
                   fitnessScale=0,
                   monogamous=False,
                   numberChildren=2,
-                  alleleAlphabet=None,
                   bestImmortal=True,
                   floatSigma=1.2,
                   floatSigmaAdapt=0.85,
@@ -525,25 +552,25 @@ class GeneticAlgorithms( object ):
 
         Default values are given in parameters.
         @param objectiveFunction user-supplied Python function
-        @param decoder user-suppliedPython function
         @param numberChromosomes number of chromosomes
         @param chromosomeLengths list of lengths of chromosomes
         @param populationSize size of initial population
-        @param populationGrowth growth factor between populations (1.0)
-        @param overpopulation population overshoot before selection (1.2)
-        @param chromosomeSets number of complete chromosome sets (1 - haploid)
+        @param decoder user-suppliedPython function (genericDecoder)
+        @param alleleAlphabet alphabet list or type float from which to draw
+               alleles ([0, 1] for haploid and [-1,0,1] for diploid chromosomes)
         @param pmx set True to enable partially matched crossover (False)
         @param pCrossover crossover probability (depending on method)
         @param pMutation mutation probability (depending on method)
         @param pInversion inversion probability
+        @param populationGrowth growth factor between populations (1.0)
+        @param overpopulation population overshoot before selection (1.2)
+        @param chromosomeSets number of complete chromosome sets (1 - haploid)
         @param fitnessScale factor for fitness scaling (1.6 for regular
                chromosomes and None for float and pmx)
         @param monogamous monogamy parameter (False)
         @param numberChildren number of children per mating (2)
         @param bestImmortal set False to not have the best individual survive
                unchanged to the next generation (True)
-        @param alleleAlphabet alphabet list or type float from which to draw
-               alleles ([0, 1] for haploid and [-1,0,1] for diploid chromosomes)
         @param floatSigma standard deviation for float-type chromosome mutation
                (1.2)
         @param floatSigmaAdapt standard deviation adaptation for random
@@ -554,6 +581,8 @@ class GeneticAlgorithms( object ):
         """
         self.__objf = objectiveFunction
         self.__decf = decoder
+        if decoder is None:
+            self.__decf = self.genericDecoder
         self.__populationSize = populationSize
         self.__bestImmortal = bestImmortal
 
@@ -792,9 +821,8 @@ class GeneticAlgorithms( object ):
         """
         for i in range( generations ):
             self.__nextGen()
-            if maxfit is not None:
-                if self.__maxfit() >= maxfit:
-                    break
+            if maxfit is not None and self.bestFit[2] >= maxfit:
+                break
             if self.__hook is not None:
                 self.__hook( self )
         return
@@ -805,9 +833,8 @@ class GeneticAlgorithms( object ):
         @brief Evaluate given population and set fitness attribute of elements.
         @param population [in, out] (mutable) any list of genotypes
         """
-        # TODO collect more than one individual per thread
         if self.__threaded:
-            cores = min( multiprocessing.cpu_count(), len( population ) )
+            cores = int( min( multiprocessing.cpu_count(), len( population ) ) )
             threads = [None] * cores
             indices = [None] * cores
 
@@ -828,7 +855,7 @@ class GeneticAlgorithms( object ):
                 threadNo = i % cores
                 population[indices[threadNo]].fitness = threads[threadNo].join()
                 population[indices[threadNo]].scaledFitness = \
-                    opulation[indices[threadNo]].fitness
+                    population[indices[threadNo]].fitness
         else:
             for individual in population:
                 args = self.__decf( individual )
@@ -1152,6 +1179,7 @@ class GeneticAlgorithms( object ):
                         jAlt -= 1
                     self.__inversions += 1
         return
+
 
     def __makeHaploid( self, genotype ):
         """!
@@ -1629,10 +1657,12 @@ if "__main__" == __name__:
         Unit test for GeneticAlgorithms class and demo for its use and function.
         """
 
+        # TODO provide automatic Unit Test on top of demo
+
         # default values
         populationSize = 30
         numberChromosomes = 1
-        chromosomeLengths = 30
+        chromosomeLengths = 32
         maxGenerations = 20
         chromosomeSets = 1
         pCrossover = 0.6
@@ -1820,21 +1850,21 @@ if "__main__" == __name__:
 
 
         ga = GeneticAlgorithms( objfunc,
-                                decoder,
                                 numberChromosomes,
                                 chromosomeLengths,
                                 populationSize,
-                                populationGrowth=populationGrowth,
-                                overpopulation=overpopulation,
-                                chromosomeSets=chromosomeSets,
+                                decoder=decoder,
+                                alleleAlphabet=alleleAlphabet,
                                 pmx=pmx,
                                 pCrossover=pCrossover,
                                 pMutation=pMutation,
                                 pInversion=pInversion,
+                                populationGrowth=populationGrowth,
+                                overpopulation=overpopulation,
+                                chromosomeSets=chromosomeSets,
                                 fitnessScale=fitnessScale,
                                 monogamous=monogamous,
                                 numberChildren=numberChildren,
-                                alleleAlphabet=alleleAlphabet,
                                 bestImmortal=bestImmortal,
                                 floatSigma=floatSigma,
                                 floatSigmaAdapt=floatSigmaAdapt,

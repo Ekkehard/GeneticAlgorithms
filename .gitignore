@@ -67,6 +67,9 @@ __pycache__
 *.bom
 *.net
 
+# Don't add the PyCharm configuration files
+.idea
+
 # Here starts the Linux-specific part that has no use under Windows
 .directory
 .depend

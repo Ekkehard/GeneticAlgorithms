@@ -5,4 +5,4 @@ parameters of an arbitrary objective function employing procedures from
 biologic evolution, i.e. "selective mating," "crossover," "mutation,"
 "selection of the fittest," and "inversion."
 
-For documentation see folder docs.
+For documentation see folder docs/html/index.html.

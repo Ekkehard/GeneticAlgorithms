@@ -228,12 +228,44 @@ from threading import Thread
 import numpy as np
 
 
+class _ThreadWithReturnValue( Thread ):
+    """!
+    @brief Class derived from Thread that returns the return value of the
+           threaded target function in the return value of join().
+    """
+
+    def __init__( self, group=None, target=None, name=None, Verbose=None,
+                  args=(), kwargs={} ):
+        """!
+        @brief Constructor - calls parent's constructor and initializes
+               return value.
+        """
+        Thread.__init__( self, group, target, name, args, kwargs )
+        self._return = None
+        return
+
+    def run( self ):
+        """!
+        @brief Overridden run method to save return value.
+        """
+        if self._target is not None:
+            self._return = self._target( *self._args, **self._kwargs )
+        return
+
+    def join( self, *args ):
+        """!
+        @brief Overridden join method returning return value.
+        """
+        Thread.join( self, *args )
+        return self._return
+
+
 class Genotype( object ):
     """!
     @brief Object representation of a genotype including genome and its
            properties and fitness of the corresponding phenotype in a given
            environment provided by the objective function.  This class is for
-           use by user-provided decoder, which receives tan instance of this
+           use by user-provided decoder, which receives an instance of this
            class as formal parameter.
 
     The genome is represented as a list of np-arrays, which can have different
@@ -286,6 +318,11 @@ class Genotype( object ):
                                                           size=chromsize[i] )] )
 
         self.__alphabet = alleleAlphabet
+        try:
+            self.__characterAlphabet = \
+                all( a.isprintable() for a in self.__alphabet )
+        except (AttributeError, TypeError):
+            self.__characterAlphabet = False
         self.__pmx = pmx
 
         # no point in providing setters and getters for the following properties
@@ -388,7 +425,7 @@ class Genotype( object ):
     def alphabet( self ):
         """!
         @brief Public read-only attribute to obtain the allele alphabet (could
-               be np array or type float).
+               be list or type float).
 
         This is NOT a method or member function!
         """
@@ -413,6 +450,16 @@ class Genotype( object ):
 
 
     @property
+    def characterAlphabet( self ):
+        """!
+        @brief Public read-only attribute to obtain the character alphabet flag.
+
+        This is NOT a method or member function!
+        """
+        return self.__characterAlphabet
+
+
+    @property
     def pmx( self ):
         """!
         @brief Public read-only attribute to obtain pmx flag.
@@ -425,36 +472,20 @@ class GeneticAlgorithms( object ):
     @brief Genetic Algorithms (GA) optimizer for arbitrary objective functions.
     """
 
-    class __ThreadWithReturnValue( Thread ):
-        """!
-        @brief Class derived from Thread that returns the return value of the
-               threaded target function in the return value of join().
-        """
-        def __init__( self, group=None, target=None, name=None, Verbose=None,
-                      args=(), kwargs={} ):
-            """!
-            @brief Constructor - calls parent's constructor and initializes
-                   return value.
-            """
-            Thread.__init__( self, group, target, name, args, kwargs )
-            self._return = None
-
-
-        def run( self ):
-            """!
-            @brief Overridden run method to save return value.
-            """
-            if self._target is not None:
-                self._return = self._target( *self._args, **self._kwargs )
-
-
-        def join( self, *args ):
-            """!
-            @brief Overridden join method returning return value.
-            """
-            Thread.join( self, *args )
-            return self._return
-
+    ## alphabet (list) containing only ASCII letters and a blank
+    alphaAlphabet = list(
+        " " 
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" 
+        "abcdefghijklmnopqrstuvwxyz" )
+    ## alphabet (list) containing alphanumeric ASCII characters
+    alnumAlphabet = copy.copy(
+        alphaAlphabet )
+    alnumAlphabet.extend( list ( "0123456789" ) )
+    ## alphabet (list) containing characters on an American keyboard
+    characterAlphabet = copy.copy(
+        alnumAlphabet )
+    characterAlphabet.extend( list(
+        "~`!@#$%^&*()-_=+[{]}\\|;:'\",<.>/?" ) )
 
 
     @staticmethod
@@ -462,19 +493,23 @@ class GeneticAlgorithms( object ):
         """!
         @brief Generic decoder - static member function to map a biallelic or
                triallelic genotype into a phenotype consisting of a numpy array
-               of real values all in the unit interval.
+               of either real values all in the unit interval or a (list of)
+               strings.
 
-        For biallelic or triallelic chromosomes, all chromosomes in the genotype
-        will be mapped into a single real value in [0 .. 1] each, treating each
-        gene as a bit of an integer and then mapping the integer onto [0 .. 1].
-        In the case of floating point genes or if the partially matched
-        crossover (pmx) flag set, they are returned directly as an array, one
-        array for each chromosome. If there was only one biallelic or triallelic
-        chromosome, the return value will not be an array but rather a single
-        real value in [0 .. 1] instead.  The same is true for a single
-        valued chromosome.
+        For numeric biallelic or triallelic chromosomes, all chromosomes in the
+        genotype will be mapped into a single real value in [0 .. 1] each,
+        treating each gene as a bit of an integer and then mapping the integer
+        onto [0 .. 1].  In the case of floating point genes or if the partially
+        matched crossover (pmx) flag set, they are returned directly as an
+        array, one array for each chromosome. If there was only one biallelic or
+        triallelic chromosome, the return value will not be an array but rather
+        a single real value in [0 .. 1] instead.  The same is true for a single
+        valued chromosome.  For chromosomes whose alleles are characters, the
+        return value is either a single string or a list of string if there was
+        more than one chromosome.
         @param genotype instance of class Genotype
-        @return tuple consisting of either a numpy array or a single real value
+        @return tuple consisting of either a numpy array, a single real value,
+                a string, or a list of strings
         """
 
         if genotype.alphabet is float or genotype.pmx:
@@ -492,6 +527,17 @@ class GeneticAlgorithms( object ):
                 return (genome[0],)
             else:
                 return (genome[0][0],)
+        elif genotype.characterAlphabet:
+            if genotype.diploid:
+                raise ValueError( "Can only handle haploid chromosomes for "
+                                  "character chromosomes" )
+            if len( genotype.genome ) == 1:
+                return ("".join( genotype.genome[0][:,0] ),)
+            else:
+                retval = []
+                for chromosome in genotype.genome:
+                    retval.append( "".join( chromosome[:,0] ) )
+                return (retval,)
         else:
             if genotype.haploid:
                 if genotype.alphabet.tolist() != [0, 1]:
@@ -506,7 +552,8 @@ class GeneticAlgorithms( object ):
                                       "chromosomes when alphabet is "
                                       "[-1, 0, 1]" )
                 # the alphabet [-1,0,1] has been chosen such that a simple max
-                # function can find the expression
+                # function can find the expression considering dominant and
+                # recessive alleles
                 express = lambda gene: abs( max( gene ) )
             retval = []
             for chromosome in genotype.genome:
@@ -538,7 +585,7 @@ class GeneticAlgorithms( object ):
                   populationGrowth=1.0,
                   overpopulation=1.3,
                   chromosomeSets=1,
-                  fitnessScale=0,
+                  fitnessScale=0.,
                   monogamous=False,
                   numberChildren=2,
                   bestImmortal=True,
@@ -640,6 +687,11 @@ class GeneticAlgorithms( object ):
         if self.__alleleAlphabet is float and self.__chromosomeSets == 2:
             raise ValueError( "Allele alphabets of type float only work with "
                               "haploid chromosomes" )
+        try:
+            self.__characterAlphabet = \
+                all( a.isprintable() for a in self.__alleleAlphabet )
+        except (AttributeError, TypeError):
+            self.__characterAlphabet = False
 
         # the following eight properties don't need setters or getters
         # they can be changed between successive calls to run() - default values
@@ -692,8 +744,8 @@ class GeneticAlgorithms( object ):
         else:
             self.pInversion = pInversion
 
-        if fitnessScale == 0:
-            # take care of default values
+        if fitnessScale == 0.:
+            # take care of default values in this case when 0.
             if self.__alleleAlphabet is float or self.__pmx:
                 self.fitnessScale = None
             else:
@@ -708,11 +760,6 @@ class GeneticAlgorithms( object ):
             raise ValueError( "Number of children must be a multiple of 2" )
         self.__numberChildren = numberChildren
 
-        if self.__alleleAlphabet is not float and \
-           populationSize <= len( self.__alleleAlphabet ):
-            raise ValueError( "Population size must be greater than {0}"
-                              "".format( len( self.__alleleAlphabet ) ) )
-
         self.__threaded = threaded
 
         self.__statistics = []
@@ -725,7 +772,9 @@ class GeneticAlgorithms( object ):
                                                 self.__alleleAlphabet,
                                                 pmx=self.__pmx ) )
 
-        if self.__alleleAlphabet is not float and not self.__pmx:
+        if self.__alleleAlphabet is not float and not self.__pmx and \
+           not self.__characterAlphabet and \
+           populationSize > len( self.__alleleAlphabet ):
             # make sure all genes have all possible values of the allele
             # alphabet represented in the initial population
             for k in range( len( self.__alleleAlphabet ) ):
@@ -834,9 +883,10 @@ class GeneticAlgorithms( object ):
         @param population [in, out] (mutable) any list of genotypes
         """
         if self.__threaded:
-            cores = int( min( multiprocessing.cpu_count(), len( population ) ) )
-            threads = [None] * cores
-            indices = [None] * cores
+            cores = min( multiprocessing.cpu_count(), len( population ) )
+            threads = [] * cores
+            indices = [] * cores
+            threadNo = 0
 
             for i, individual in enumerate( population ):
                 threadNo = i % cores
@@ -844,8 +894,8 @@ class GeneticAlgorithms( object ):
                     population[indices[threadNo]].fitness = \
                                                         threads[threadNo].join()
                 threads[threadNo] = \
-                  self.__ThreadWithReturnValue( target=self.__objf,
-                                                args=self.__decf( individual ) )
+                    _ThreadWithReturnValue( target=self.__objf,
+                                            args=self.__decf( individual ) )
                 threads[threadNo].daemon = True
                 threads[threadNo].start()
                 indices[threadNo] = i
@@ -1441,6 +1491,17 @@ if "__main__" == __name__:
     import matplotlib.pyplot as plt
     import time
 
+
+    def printHelp():
+        """!
+        """
+        helpText = \
+"""
+No help
+"""
+        print( helpText )
+        return 0
+
     def objfunc0( *args ):
         """!
         @brief Objective function for unit test from Goldberg's book (modified).
@@ -1597,6 +1658,26 @@ if "__main__" == __name__:
         return tsp.mindist / distance
 
 
+    def pwd( *args ):
+        """!
+        @brief Password guessing.
+        @param args tuple with string with password guess
+        @return percentage of correct characters at correct location [0 .. 1]
+        """
+        try:
+            if type( pwd.pwd ) is not str:
+                raise AttributeError
+        except AttributeError:
+            pwd.pwd = "Hello World!"
+        guess = args[0]
+        length = len( pwd.pwd )
+        correct = 0
+        for i in range( length ):
+            if pwd.pwd[i] == guess[i]:
+                correct += 1
+        return correct / length
+
+
     def animate( ga ):
         """!
         @brief Plot animated progress of ga.
@@ -1649,15 +1730,10 @@ if "__main__" == __name__:
 
 
 
-
-    def main():
+    def demo():
         """!
-        @brief Main Program - Unit Test and Demo
-
-        Unit test for GeneticAlgorithms class and demo for its use and function.
+        @brief Interactive demo for GeneticAlgorithms
         """
-
-        # TODO provide automatic Unit Test on top of demo
 
         # default values
         populationSize = 30
@@ -1712,6 +1788,17 @@ if "__main__" == __name__:
             pCrossover = 0.9
             pMutation = 0.2
             fitnessScale = None
+        elif objfunc == pwd:
+            alleleAlphabet = GeneticAlgorithms.characterAlphabet
+            alleleAlphabetStr = "characterAlphabet"
+            pwd.pwd = input( "Enter password to guess ------------- > " )
+            chromosomeLengths = len( pwd.pwd )
+            populationSize = 10
+            maxGenerations = 1000
+            pCrossover = 0.2
+            pMutation = 0.5
+            fitnessScale = None
+            hook = print
 
         while True:
             string = input( "Enter hook function ({0}) ------- > "
@@ -1759,6 +1846,12 @@ if "__main__" == __name__:
                     floatSigmaAdapt = float( sstring )
             elif string and (string == "bool" or string == "binary"):
                 string = "[0,1]"
+            elif string and string == "alphaAlphabet":
+                string = "GeneticAlgorithms.alphaAlphabet"
+            elif string and string == "alnumAlphabet":
+                string = "GeneticAlgorithms.alnumAlphabet"
+            elif string and string == "characterAlphabet":
+                string = "GeneticAlgorithms.characterAlphabet"
             if string:
                 try:
                     alleleAlphabet = eval( string )
@@ -1883,31 +1976,52 @@ if "__main__" == __name__:
         y1 = [s["max"] for s in ga.statistics]
         y2 = [s["mean"] for s in ga.statistics]
 
-        if hook != animate:
-            plt.subplot( 2, 1, 1 )
-            x = np.linspace( 0, 1, 500 )
-            if objfunc == tsp:
-                x = list( tsp.coordinates[param[0],0] )
-                x.append( x[0] )
-                y = list( tsp.coordinates[param[0],1] )
-                y.append( y[0] )
-                plt.plot( x, y, "o-" )
-            else:
-                y = [objfunc( arg ) for arg in x]
-                plt.plot( x, y )
-                x = []
-                y = []
-                for ind in ga.population:
-                    x.append( decoder( ind ) )
-                    y.append( ind.fitness )
-                plt.plot( x, y, 'o' )
-        plt.subplot( 2, 1, 2 )
-        plt.plot( xs, y1, y2 )
-        plt.legend( ["max","mean"], loc="lower right" )
-        print( "\nType 'q' to quit" )
-        plt.show()
+        if objfunc != pwd:
+            if hook != animate:
+                plt.subplot( 2, 1, 1 )
+                x = np.linspace( 0, 1, 500 )
+                if objfunc == tsp:
+                    x = list( tsp.coordinates[param[0],0] )
+                    x.append( x[0] )
+                    y = list( tsp.coordinates[param[0],1] )
+                    y.append( y[0] )
+                    plt.plot( x, y, "o-" )
+                else:
+                    y = [objfunc( arg ) for arg in x]
+                    plt.plot( x, y )
+                    x = []
+                    y = []
+                    for ind in ga.population:
+                        x.append( decoder( ind ) )
+                        y.append( ind.fitness )
+                    plt.plot( x, y, 'o' )
+            plt.subplot( 2, 1, 2 )
+            plt.plot( xs, y1, y2 )
+            plt.legend( ["max","mean"], loc="lower right" )
+            print( "\nType 'q' to quit" )
+            plt.show()
 
 
         return 0
+
+
+    def main():
+        """!
+        @brief Main Program - Unit Test and Demo
+
+        Unit test for GeneticAlgorithms class and demo for its use and function.
+        """
+
+        try:
+            if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+                return printHelp()
+            elif sys.argv[1] == "-d" or sys.argv[1] == "--demo":
+                return demo()
+        except IndexError:
+            pass
+
+        # TODO provide automatic Unit Test
+        raise ValueError( "Unit Test not yet implemented" )
+
 
     sys.exit( int( main() or 0 ) )

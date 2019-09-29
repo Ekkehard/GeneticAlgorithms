@@ -108,11 +108,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a7946da3659af885ffaec7319efc86c8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain the full genome as list of numpy arrays, each one representing one chromosome.  <a href="#a7946da3659af885ffaec7319efc86c8a">More...</a><br /></td></tr>
 <tr class="separator:a7946da3659af885ffaec7319efc86c8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acadcec271a7ee7b7dd7a85177963ff51"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGeneticAlgorithms_1_1Genotype.html#acadcec271a7ee7b7dd7a85177963ff51">alphabet</a> (self)</td></tr>
-<tr class="memdesc:acadcec271a7ee7b7dd7a85177963ff51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain the allele alphabet (could be np array or type float).  <a href="#acadcec271a7ee7b7dd7a85177963ff51">More...</a><br /></td></tr>
+<tr class="memdesc:acadcec271a7ee7b7dd7a85177963ff51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain the allele alphabet (could be list or type float).  <a href="#acadcec271a7ee7b7dd7a85177963ff51">More...</a><br /></td></tr>
 <tr class="separator:acadcec271a7ee7b7dd7a85177963ff51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a856985f9b63ec3c6b010d75e1cc6cc8b"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGeneticAlgorithms_1_1Genotype.html#a856985f9b63ec3c6b010d75e1cc6cc8b">alphabetLength</a> (self)</td></tr>
 <tr class="memdesc:a856985f9b63ec3c6b010d75e1cc6cc8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain the length of the allele alphabet.  <a href="#a856985f9b63ec3c6b010d75e1cc6cc8b">More...</a><br /></td></tr>
 <tr class="separator:a856985f9b63ec3c6b010d75e1cc6cc8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3e601deba738abd4bf4ea0e316fe16a"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGeneticAlgorithms_1_1Genotype.html#ad3e601deba738abd4bf4ea0e316fe16a">characterAlphabet</a> (self)</td></tr>
+<tr class="memdesc:ad3e601deba738abd4bf4ea0e316fe16a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain the character alphabet flag.  <a href="#ad3e601deba738abd4bf4ea0e316fe16a">More...</a><br /></td></tr>
+<tr class="separator:ad3e601deba738abd4bf4ea0e316fe16a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25e8e89c1d4ea8073fa6dd87f4dc2cde"><td class="memItemLeft" align="right" valign="top"><a id="a25e8e89c1d4ea8073fa6dd87f4dc2cde"></a>
 def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGeneticAlgorithms_1_1Genotype.html#a25e8e89c1d4ea8073fa6dd87f4dc2cde">pmx</a> (self)</td></tr>
 <tr class="memdesc:a25e8e89c1d4ea8073fa6dd87f4dc2cde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Public read-only attribute to obtain pmx flag. <br /></td></tr>
@@ -131,7 +134,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Object representation of a genotype including genome and its properties and fitness of the corresponding phenotype in a given environment provided by the objective function. </p>
-<p>This class is for use by user-provided decoder, which receives tan instance of this class as formal parameter.</p>
+<p>This class is for use by user-provided decoder, which receives an instance of this class as formal parameter.</p>
 <p>The genome is represented as a list of np-arrays, which can have different lengths, each representing one chromosome and its length the number of genes in that chromosome. The chromosomes are single vectors for haploid chromosomes and two-column matrices for diploid chromosomes. All genes are encoded as alleles from a given alphabet, which can also be the set of floating point numbers. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6c6001e80fdf9d18d04e890671817d43"></a>
@@ -243,7 +246,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Public read-only attribute to obtain the allele alphabet (could be np array or type float). </p>
+<p>Public read-only attribute to obtain the allele alphabet (could be list or type float). </p>
 <p>This is NOT a method or member function! </p>
 
 </div>
@@ -266,6 +269,27 @@ Public Attributes</h2></td></tr>
 
 <p>Public read-only attribute to obtain the length of the allele alphabet. </p>
 <p>As appropriate, the attribute is np.inf is the allele alphabet is type float.</p>
+<p>This is NOT a method or member function! </p>
+
+</div>
+</div>
+<a id="ad3e601deba738abd4bf4ea0e316fe16a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3e601deba738abd4bf4ea0e316fe16a">&#9670;&nbsp;</a></span>characterAlphabet()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">def GeneticAlgorithms.Genotype.characterAlphabet </td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>self</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Public read-only attribute to obtain the character alphabet flag. </p>
 <p>This is NOT a method or member function! </p>
 
 </div>

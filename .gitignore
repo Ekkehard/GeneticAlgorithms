@@ -76,7 +76,6 @@ __pycache__
 core
 *~
 .*.swp
-*.map
 *.[oa]
 *.so
 *.kate-swp

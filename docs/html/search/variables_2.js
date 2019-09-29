@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['pcrossover',['pCrossover',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#aacf531bd1dbf717add0804190ca7994f',1,'GeneticAlgorithms::GeneticAlgorithms']]],
-  ['pinversion',['pInversion',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a9cd296e76e42b75df4208f3892f4f71b',1,'GeneticAlgorithms::GeneticAlgorithms']]],
-  ['pmutation',['pMutation',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a8e00ccef261c502b07a984bfaec0bbfd',1,'GeneticAlgorithms::GeneticAlgorithms']]],
-  ['populationgrowth',['populationGrowth',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a401fc77c68e49908abd8247c0fb1f6a2',1,'GeneticAlgorithms::GeneticAlgorithms']]]
+  ['fitness',['fitness',['../classGeneticAlgorithms_1_1Genotype.html#a1507d43a6bfaa3e61e300b4a800dcb1b',1,'GeneticAlgorithms::Genotype']]],
+  ['fitnessscale',['fitnessScale',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a84cb79dc4970fa02b0e7553d18a4e8cc',1,'GeneticAlgorithms::GeneticAlgorithms']]],
+  ['floatsigma',['floatSigma',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#acb21fb2bf7434de9a117e97667f857e1',1,'GeneticAlgorithms::GeneticAlgorithms']]],
+  ['floatsigmaadapt',['floatSigmaAdapt',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#ab3ea578054d11005078798bd75d1e1f1',1,'GeneticAlgorithms::GeneticAlgorithms']]]
 ];

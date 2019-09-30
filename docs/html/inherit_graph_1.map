@@ -1,4 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classGeneticAlgorithms_1_1GeneticAlgorithms.html" title="Genetic Algorithms (GA) optimizer for arbitrary objective functions. " alt="" coords="5,29,184,71"/>
-<area shape="rect" id="node2" href="$classGeneticAlgorithms_1_1Genotype.html" title="Object representation of a genotype including genome and its properties and fitness of the correspond..." alt="" coords="232,37,421,63"/>
+<area shape="rect" id="node2" href="$classGeneticAlgorithms_1_1GeneticAlgorithms.html" title="Genetic Algorithms (GA) optimizer for arbitrary objective functions. " alt="" coords="116,5,295,47"/>
+<area shape="rect" id="node3" href="$classGeneticAlgorithms_1_1Genotype.html" title="Object representation of a genotype including genome and its properties and fitness of the correspond..." alt="" coords="111,71,300,98"/>
 </map>

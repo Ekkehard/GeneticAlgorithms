@@ -3,7 +3,7 @@
 ##
 # @file       GeneticAlgorithms.py
 #
-# @version    1.0.1
+# @version    1.1.0
 #
 # @par Purpose
 # Class to implement Genetic Algorithms using genes taking on values of settable
@@ -219,6 +219,8 @@
 #  -----------------+----------------+------------------------------------------
 #   Tue Aug 20 2019 | Ekkehard Blanz | created
 #   Mon Sep 16 2019 | Ekkehard Blanz | added first part of documentation
+#   Mon Sep 16 2019 | Ekkehard Blanz | added character alphabets and separated
+#                   |                | demo from unit test
 #                   |                |
 
 
@@ -325,12 +327,10 @@ class Genotype( object ):
             self.__characterAlphabet = False
         self.__pmx = pmx
 
-        # no point in providing setters and getters for the following properties
-        ## fitness of this genotype in environment provided by objective
-        # function
-        self.fitness = None
-        ## scaled fitness of genotype
-        self.scaledFitness = None
+        # fitness of this genotype in environment provided by objective function
+        self.__fitness = None
+        # scaled fitness of genotype
+        self.__scaledFitness = None
 
         return
 
@@ -364,6 +364,64 @@ class Genotype( object ):
                 retstr += "), "
 
         return retstr[:-2]
+
+
+    @property
+    def fitness( self ):
+        """!
+        @brief Public attribute to obtain fitness of corresponding phenotype.
+
+        This is NOT a method or member function!
+        """
+        return self.__fitness
+
+
+    @fitness.setter
+    def fitness( self, value ):
+        """!
+        @brief Setter for fitness property - checks if value is of proper type.
+
+        This is NOT a method or member function!
+        """
+        try:
+            if value < 0:
+                raise TypeError
+            self.__fitness = value
+        except (TypeError, ValueError):
+            raise ValueError( "Fitness returned by objective function must be "
+                              "a real or integer value\ngreater than or equal "
+                              "to 0 - not {0}".format( value ) )
+        return
+
+
+    @property
+    def scaledFitness( self ):
+        """!
+        @brief Public attribute to obtain scaledFitness of corresponding
+               phenotype.
+
+        This is NOT a method or member function!
+        """
+        return self.__scaledFitness
+
+
+    @scaledFitness.setter
+    def scaledFitness( self, value ):
+        """!
+        @brief Setter for scaledFitness property - checks if value is of proper
+               type.
+
+        This is NOT a method or member function!
+        """
+        try:
+            if value < 0:
+                raise TypeError
+            self.__scaledFitness = value
+        except (TypeError, ValueError):
+            raise ValueError( "The computed scaled fitness must be "
+                              "a real or integer value\ngreater than or equal "
+                              "to 0 - not {0}".format( value ) )
+        return
 
 
     @property
@@ -500,7 +558,7 @@ class GeneticAlgorithms( object ):
         genotype will be mapped into a single real value in [0 .. 1] each,
         treating each gene as a bit of an integer and then mapping the integer
         onto [0 .. 1].  In the case of floating point genes or if the partially
-        matched crossover (pmx) flag set, they are returned directly as an
+        matched crossover (pmx) flag is set, they are returned directly as an
         array, one array for each chromosome. If there was only one biallelic or
         triallelic chromosome, the return value will not be an array but rather
         a single real value in [0 .. 1] instead.  The same is true for a single
@@ -647,11 +705,10 @@ class GeneticAlgorithms( object ):
                 raise ValueError( "For PMX the alphabet cannot be float" )
             if alleleAlphabet is None:
                 alleleAlphabet = np.arange( chromosomeLengths[0] )
-            for l in chromosomeLengths:
-                if l != len( alleleAlphabet ):
-                    raise ValueError( "For PMX the chromosome length must be "
-                                      "the same as the alphabet length "
-                                      "in all chromosomes" )
+            if any( l != len( alleleAlphabet ) for l in chromosomeLengths ):
+                raise ValueError( "For PMX the chromosome length must be "
+                                  "the same as the alphabet length "
+                                  "in all chromosomes" )
             if chromosomeSets != 1:
                 raise ValueError( "PMX only works with haploid chromosome "
                                   "sets" )
@@ -666,9 +723,9 @@ class GeneticAlgorithms( object ):
 
         if alleleAlphabet is None:
             if self.__chromosomeSets == 1:
-                alleleAlphabet = np.array( [0, 1] )
+                self.__alleleAlphabet = np.array( [0, 1] )
             else:
-                alleleAlphabet = np.array( [-1, 0, 1] )
+                self.__alleleAlphabet = np.array( [-1, 0, 1] )
         elif type( alleleAlphabet ) is list:
             dtype = type( alleleAlphabet[0] )
             # prevent numpy's "intelligent" type unification if not all
@@ -746,7 +803,8 @@ class GeneticAlgorithms( object ):
 
         if fitnessScale == 0.:
             # take care of default values in this case when 0.
-            if self.__alleleAlphabet is float or self.__pmx:
+            if self.__alleleAlphabet is float or self.__characterAlphabet \
+               or self.__pmx:
                 self.fitnessScale = None
             else:
                 self.fitnessScale = 1.6
@@ -765,7 +823,7 @@ class GeneticAlgorithms( object ):
         self.__statistics = []
         self.__population = []
 
-        for i in range( populationSize ):
+        for __ in range( populationSize ):
             self.__population.append( Genotype( numberChromosomes,
                                                 chromosomeLengths,
                                                 self.__chromosomeSets,
@@ -868,7 +926,7 @@ class GeneticAlgorithms( object ):
         @param maxfit abortion criterion when fitness reached maximum (default
                is None)
         """
-        for i in range( generations ):
+        for __ in range( generations ):
             self.__nextGen()
             if maxfit is not None and self.bestFit[2] >= maxfit:
                 break
@@ -884,8 +942,8 @@ class GeneticAlgorithms( object ):
         """
         if self.__threaded:
             cores = min( multiprocessing.cpu_count(), len( population ) )
-            threads = [] * cores
-            indices = [] * cores
+            threads = [None] * cores
+            indices = [None] * cores
             threadNo = 0
 
             for i, individual in enumerate( population ):
@@ -893,6 +951,8 @@ class GeneticAlgorithms( object ):
                 if i >= cores:
                     population[indices[threadNo]].fitness = \
                                                         threads[threadNo].join()
+                    population[indices[threadNo]].scaledFitness = \
+                                           population[indices[threadNo]].fitness
                 threads[threadNo] = \
                     _ThreadWithReturnValue( target=self.__objf,
                                             args=self.__decf( individual ) )
@@ -905,7 +965,7 @@ class GeneticAlgorithms( object ):
                 threadNo = i % cores
                 population[indices[threadNo]].fitness = threads[threadNo].join()
                 population[indices[threadNo]].scaledFitness = \
-                    population[indices[threadNo]].fitness
+                                           population[indices[threadNo]].fitness
         else:
             for individual in population:
                 args = self.__decf( individual )
@@ -1292,7 +1352,7 @@ class GeneticAlgorithms( object ):
         """!
         @brief Perform "partially matched crossover" by swapping the alleles
                of the parents in a randomly picked region and adjusting the
-               rest of  the alleles such that each child is a gain a valid
+               rest of  the alleles such that each child is again a valid
                permutation of the alphabet.
         @param genome1 instance of maternal Genotype
         @param genome2 instance of paternal Genotype
@@ -1490,21 +1550,183 @@ if "__main__" == __name__:
     import sys
     import matplotlib.pyplot as plt
     import time
+    import unittest
+
+
+    class TestGenericAlgorithms( unittest.TestCase ):
+        """!
+        @brief Unit Test Class - all methods starting with test are
+               automatically executed by unittest.
+        """
+        counter = 0
+
+        @staticmethod
+        def hookTest( ga ):
+            TestGenericAlgorithms.counter += 1
+            return
+
+        def setUp( self ):
+            return
+
+
+        def tearDown( self ):
+            return
+
+
+        def testHaploidChromosomes( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30 )
+            ga.run( 20, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testDiploidChromosomes( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30,
+                                    chromosomeSets=2 )
+            ga.run( 20, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testFloatChromosomes( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    1,
+                                    30,
+                                    alleleAlphabet=float )
+            ga.run( 40, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testCharacterChromosomes( self ):
+            pwd.pwd = "Hello"
+            ga = GeneticAlgorithms(
+                    pwd,
+                    1,
+                    len( pwd.pwd ),
+                    10,
+                    alleleAlphabet=GeneticAlgorithms.alnumAlphabet )
+            ga.run( 800, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            return
+
+
+        def testBestNotImmortal( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    20,
+                                    bestImmortal=False )
+            ga.run( 20 )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testPmx( self ):
+            ga = GeneticAlgorithms( tsp,
+                                    1,
+                                    5,
+                                    30,
+                                    pmx=True)
+            ga.run( 80, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testMultiThreading( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30,
+                                    threaded=True )
+            ga.run( 20, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            return
+
+
+        def testMonogamous( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30,
+                                    monogamous=True )
+            ga.run( 20, 1. )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            del ga
+            return
+
+
+        def testHook( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30,
+                                    hook=self.hookTest )
+            TestGenericAlgorithms.counter = 0
+            ga.run( 20 )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( TestGenericAlgorithms.counter == 20 )
+            del ga
+            return
+
+
+        def testPopulationGrowth( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    20,
+                                    populationGrowth=1.1 )
+            ga.run( 20 )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 132 )
+            del ga
+            return
+
+
 
 
     def printHelp():
         """!
+        @brief Print command line help text.
+        @return 0
         """
         helpText = \
 """
-No help
+Synopsis:
+    python3 GenericAlgorithms.py <flag>
+where flag can be -h or --help to print this help information, as well as -d or 
+--demo to start the interactive demo program.  If no flag is given, the program 
+executes its unit test.
 """
         print( helpText )
         return 0
 
+
     def objfunc0( *args ):
         """!
-        @brief Objective function for unit test from Goldberg's book (modified).
+        @brief Objective function for demo from Goldberg's book (modified).
 
         This function takes on a single float argument in [0 .. 1].  The
         original function exhibits one maximum at the upper end of the interval,
@@ -1526,7 +1748,7 @@ No help
 
     def objfunc1( *args ):
         """!
-        @brief Objective function 1 for unit test.
+        @brief Objective function 1 for demo.
 
         This function takes on a single float argument in [0 .. 1].  It exhibits
         two maxima in this interval, one at x=0.15 with objective value 1, the
@@ -1554,7 +1776,7 @@ No help
 
     def objfunc2( *args ):
         """!
-        @brief Objective function 2 for unit test.
+        @brief Objective function 2 for demo.
 
         This function takes on a single float argument in [0 .. 1].  It exhibits
         three maxima in this interval, one at x=0.15 with objective value 1,
@@ -1670,12 +1892,8 @@ No help
         except AttributeError:
             pwd.pwd = "Hello World!"
         guess = args[0]
-        length = len( pwd.pwd )
-        correct = 0
-        for i in range( length ):
-            if pwd.pwd[i] == guess[i]:
-                correct += 1
-        return correct / length
+        return sum( 1 for (p, g) in zip( pwd.pwd, guess) if p == g) / \
+               len( pwd.pwd )
 
 
     def animate( ga ):
@@ -1732,7 +1950,7 @@ No help
 
     def demo():
         """!
-        @brief Interactive demo for GeneticAlgorithms
+        @brief Interactive demo for GeneticAlgorithms.
         """
 
         # default values
@@ -1763,7 +1981,7 @@ No help
         print( "\n\nDefault values given in parentheses can be accepted by "
                "hitting 'enter'.\n" )
         print( "Currently available objective functions: "
-               "objfunc0, objfunc1, objfunc2, and tsp" )
+               "objfunc0, objfunc1, objfunc2, tsp, and pwd" )
         print( "Currently available hook functions: "
                "animate, print, and None\n" )
 
@@ -2001,7 +2219,6 @@ No help
             print( "\nType 'q' to quit" )
             plt.show()
 
-
         return 0
 
 
@@ -2020,8 +2237,7 @@ No help
         except IndexError:
             pass
 
-        # TODO provide automatic Unit Test
-        raise ValueError( "Unit Test not yet implemented" )
+        unittest.main()
 
 
     sys.exit( int( main() or 0 ) )

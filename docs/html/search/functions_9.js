@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['numberchromosomes',['numberChromosomes',['../classGeneticAlgorithms_1_1Genotype.html#ace0e20dff6d0dc44cf5736ab7496068f',1,'GeneticAlgorithms::Genotype']]]
+  ['main',['main',['../GeneticAlgorithms_8py.html#a67c3347f4b6d2b86c1233e6c2ddbae36',1,'GeneticAlgorithms']]]
 ];

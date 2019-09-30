@@ -1,4 +1,7 @@
 var searchData=
 [
-  ['run',['run',['../classGeneticAlgorithms_1_1__ThreadWithReturnValue.html#ac4eb8ea109f0ff610e1bf9247afe0de7',1,'GeneticAlgorithms._ThreadWithReturnValue.run()'],['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a7b7757e0bff1f228ab22ec0ec64b73ca',1,'GeneticAlgorithms.GeneticAlgorithms.run()']]]
+  ['pmx',['pmx',['../classGeneticAlgorithms_1_1Genotype.html#a25e8e89c1d4ea8073fa6dd87f4dc2cde',1,'GeneticAlgorithms.Genotype.pmx()'],['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a13fc2a169dd5849618f07b5d096401ba',1,'GeneticAlgorithms.GeneticAlgorithms.pmx()']]],
+  ['population',['population',['../classGeneticAlgorithms_1_1GeneticAlgorithms.html#a5e7f3b8bfc872e3431048d51ca66d40d',1,'GeneticAlgorithms::GeneticAlgorithms']]],
+  ['printhelp',['printHelp',['../GeneticAlgorithms_8py.html#ad4e5726cd3b24d9b11968b7a920c28c5',1,'GeneticAlgorithms']]],
+  ['pwd',['pwd',['../GeneticAlgorithms_8py.html#a219a0bde9e1a0a09acc460b825f8bdf7',1,'GeneticAlgorithms']]]
 ];

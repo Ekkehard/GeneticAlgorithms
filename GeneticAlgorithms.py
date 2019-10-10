@@ -3,7 +3,7 @@
 ##
 # @file       GeneticAlgorithms.py
 #
-# @version    1.1.0
+# @version    1.1.1
 #
 # @par Purpose
 # Class to implement Genetic Algorithms using genes taking on values of settable
@@ -221,6 +221,7 @@
 #   Mon Sep 16 2019 | Ekkehard Blanz | added first part of documentation
 #   Mon Sep 16 2019 | Ekkehard Blanz | added character alphabets and separated
 #                   |                | demo from unit test
+#   Thu Oct 10 2019 | Ekkehard Blanz | improved unit test
 #                   |                |
 
 
@@ -658,7 +659,8 @@ class GeneticAlgorithms( object ):
         Default values are given in parameters.
         @param objectiveFunction user-supplied Python function
         @param numberChromosomes number of chromosomes
-        @param chromosomeLengths list of lengths of chromosomes
+        @param chromosomeLengths list of lengths of chromosomes - can be int
+               if all chromosomes have the same length
         @param populationSize size of initial population
         @param decoder user-suppliedPython function (genericDecoder)
         @param alleleAlphabet alphabet list or type float from which to draw
@@ -691,9 +693,9 @@ class GeneticAlgorithms( object ):
         self.__populationSize = populationSize
         self.__bestImmortal = bestImmortal
 
-        if numberChromosomes == 1 and type( chromosomeLengths ) is not list:
-            chromosomeLengths = [chromosomeLengths]
-        elif numberChromosomes != len( chromosomeLengths ):
+        if type( chromosomeLengths ) is not list:
+            chromosomeLengths = [chromosomeLengths] * numberChromosomes
+        if numberChromosomes != len( chromosomeLengths ):
             raise ValueError( "chromosomeLengths must have exactly"
                               "numberChromosomes elements" )
 
@@ -702,11 +704,11 @@ class GeneticAlgorithms( object ):
 
         if pmx:
             if alleleAlphabet is float:
-                raise ValueError( "For PMX the alphabet cannot be float" )
+                raise ValueError( "For PMX, the alphabet cannot be float" )
             if alleleAlphabet is None:
                 alleleAlphabet = np.arange( chromosomeLengths[0] )
             if any( l != len( alleleAlphabet ) for l in chromosomeLengths ):
-                raise ValueError( "For PMX the chromosome length must be "
+                raise ValueError( "For PMX, the chromosome length must be "
                                   "the same as the alphabet length "
                                   "in all chromosomes" )
             if chromosomeSets != 1:
@@ -1565,6 +1567,10 @@ if "__main__" == __name__:
             TestGenericAlgorithms.counter += 1
             return
 
+        @staticmethod
+        def objfunc2chromosomes( *args ):
+            return args[0][0] * args[0][1]
+
         def setUp( self ):
             return
 
@@ -1578,9 +1584,26 @@ if "__main__" == __name__:
                                     1,
                                     32,
                                     30 )
-            ga.run( 20, 1. )
+            ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
+            del ga
+            return
+
+
+        def testEarlyExit( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30 )
+            ga.run( 20, 0.5 )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit >= 0.5 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1591,9 +1614,12 @@ if "__main__" == __name__:
                                     32,
                                     30,
                                     chromosomeSets=2 )
-            ga.run( 20, 1. )
+            ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1604,9 +1630,12 @@ if "__main__" == __name__:
                                     1,
                                     30,
                                     alleleAlphabet=float )
-            ga.run( 40, 1. )
+            ga.run( 40 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 40 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1619,9 +1648,12 @@ if "__main__" == __name__:
                     len( pwd.pwd ),
                     10,
                     alleleAlphabet=GeneticAlgorithms.alnumAlphabet )
-            ga.run( 800, 1. )
+            ga.run( 800 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 10 )
+            self.assertTrue( ga.generation == 800 )
+            self.assertTrue( ga.pmx == False )
             return
 
 
@@ -1634,6 +1666,9 @@ if "__main__" == __name__:
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) ==20 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1643,10 +1678,13 @@ if "__main__" == __name__:
                                     1,
                                     5,
                                     30,
-                                    pmx=True)
-            ga.run( 80, 1. )
+                                    pmx=True )
+            ga.run( 80 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 80 )
+            self.assertTrue( ga.pmx == True )
             del ga
             return
 
@@ -1657,9 +1695,12 @@ if "__main__" == __name__:
                                     32,
                                     30,
                                     threaded=True )
-            ga.run( 20, 1. )
+            ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             return
 
 
@@ -1669,9 +1710,12 @@ if "__main__" == __name__:
                                     32,
                                     30,
                                     monogamous=True )
-            ga.run( 20, 1. )
+            ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1687,6 +1731,9 @@ if "__main__" == __name__:
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
             self.assertTrue( TestGenericAlgorithms.counter == 20 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
 
@@ -1701,8 +1748,152 @@ if "__main__" == __name__:
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
             self.assertTrue( len( ga.population ) == 132 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
             del ga
             return
+
+
+        def testFourChildren( self ):
+            ga = GeneticAlgorithms( objfunc1,
+                                    1,
+                                    32,
+                                    30,
+                                    numberChildren=4 )
+            ga.run( 20 )
+            genome, param, bestFit = ga.bestFit
+            self.assertTrue( bestFit > 0.99 )
+            self.assertTrue( len( ga.population ) == 30 )
+            self.assertTrue( ga.generation == 20 )
+            self.assertTrue( ga.pmx == False )
+            del ga
+            return
+
+
+        def testErrorConditions1( self ):
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        [32],
+                                        30 )
+            except ValueError:
+                self.assertTrue( False )
+            try:
+                ga = GeneticAlgorithms( self.objfunc2chromosomes,
+                                        2,
+                                        32,
+                                        30 )
+            except ValueError as e:
+                self.assertTrue( False )
+            try:
+                ga = GeneticAlgorithms( self.objfunc2chromosomes,
+                                        2,
+                                        [32],
+                                        30 )
+                self.assertTrue( False )
+            except ValueError as e:
+                pass
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        [32,32],
+                                        30 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            return
+
+
+        def testErrorConditions2( self ):
+            try:
+                ga = GeneticAlgorithms( tsp,
+                                        1,
+                                        5,
+                                        30,
+                                        pmx=True,
+                                        alleleAlphabet=float )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            try:
+                ga = GeneticAlgorithms( tsp,
+                                        1,
+                                        5,
+                                        30,
+                                        pmx=True,
+                                        numberChildren=4 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            try:
+                ga = GeneticAlgorithms( tsp,
+                                        1,
+                                        5,
+                                        30,
+                                        pmx=True,
+                                        chromosomeSets=2 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            return
+
+
+        def testErrorConditions3( self ):
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        32,
+                                        30,
+                                        chromosomeSets=3 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            return
+
+
+        def testErrorConditions4( self ):
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        32,
+                                        30,
+                                        alleleAlphabet=3 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        32,
+                                        30,
+                                        alleleAlphabet=int )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        32,
+                                        30,
+                                        alleleAlphabet=float,
+                                        chromosomeSets=2 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+            return
+
+
+        def testErrorConditions5( self ):
+            try:
+                ga = GeneticAlgorithms( objfunc1,
+                                        1,
+                                        32,
+                                        30,
+                                        fitnessScale=0.9 )
+                self.assertTrue( False )
+            except ValueError:
+                pass
+
 
 
 

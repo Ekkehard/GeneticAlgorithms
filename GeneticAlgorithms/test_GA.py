@@ -3,14 +3,14 @@
 ##
 # @file       unitTest.py
 #
-# @version    1.1.1
+# @version    1.2.0
 #
 # @par Purpose
 # Unit test for GeneticAlgorithms package.
 #
 # @par Comments
 # This programs performs a fully automated unit test of the class 
-# or, at the users option, a graphic demo.GeneticAlgorithms
+# or, at the users option, a graphic demo.
 # This is Python 3 code!
 #
 # @par Known Bugs
@@ -27,6 +27,7 @@
 #  -----------------+----------------+------------------------------------------
 #   Tue Aug 20 2019 | Ekkehard Blanz | created
 #   Sun Nov 06 2022 | Ekkehard Blanz | extracted fromm GeneticAlgorithms.py
+#   Wed Nov 30 2022 | Ekkehard Blanz | renamed main class to Optimizer
 #                   |                |
 #
 
@@ -36,8 +37,8 @@ import matplotlib.pyplot as plt
 import time
 import unittest
 import numpy as np
-from GeneticAlgorithms import GeneticAlgorithms
-from Genotype import Genotype
+import copy
+import GeneticAlgorithms as GA
 
 if "__main__" == __name__:
 
@@ -67,10 +68,10 @@ if "__main__" == __name__:
 
 
         def testHaploidChromosomes( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30 )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30 )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -82,10 +83,10 @@ if "__main__" == __name__:
 
 
         def testEarlyExit( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30 )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30 )
             ga.run( 20, 0.5 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit >= 0.5 )
@@ -96,11 +97,11 @@ if "__main__" == __name__:
 
 
         def testDiploidChromosomes( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30,
-                                    chromosomeSets=2 )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30,
+                               chromosomeSets=2 )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -112,11 +113,11 @@ if "__main__" == __name__:
 
 
         def testFloatChromosomes( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    1,
-                                    30,
-                                    alleleAlphabet=float )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               1,
+                               30,
+                               alleleAlphabet=float )
             ga.run( 40 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -129,12 +130,11 @@ if "__main__" == __name__:
 
         def testCharacterChromosomes( self ):
             pwd.pwd = "Hello"
-            ga = GeneticAlgorithms(
-                    pwd,
-                    1,
-                    len( pwd.pwd ),
-                    10,
-                    alleleAlphabet=GeneticAlgorithms.alnumAlphabet )
+            ga = GA.Optimizer( pwd,
+                               1,
+                               len( pwd.pwd ),
+                               10,
+                               alleleAlphabet=GA.Optimizer.alnumAlphabet )
             ga.run( 800 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -145,11 +145,11 @@ if "__main__" == __name__:
 
 
         def testBestNotImmortal( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    20,
-                                    bestImmortal=False )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               20,
+                               bestImmortal=False )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -161,11 +161,11 @@ if "__main__" == __name__:
 
 
         def testPmx( self ):
-            ga = GeneticAlgorithms( tsp,
-                                    1,
-                                    5,
-                                    30,
-                                    pmx=True )
+            ga = GA.Optimizer( tsp,
+                               1,
+                               5,
+                               30,
+                               pmx=True )
             ga.run( 80 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -177,11 +177,11 @@ if "__main__" == __name__:
 
 
         def testMultiThreading( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30,
-                                    threaded=True )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30,
+                               threaded=True )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -192,11 +192,11 @@ if "__main__" == __name__:
 
 
         def testMonogamous( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30,
-                                    monogamous=True )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30,
+                               monogamous=True )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -208,11 +208,11 @@ if "__main__" == __name__:
 
 
         def testHook( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30,
-                                    hook=self.hookTest )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30,
+                               hook=self.hookTest )
             TestGenericAlgorithms.counter = 0
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
@@ -226,11 +226,11 @@ if "__main__" == __name__:
 
 
         def testPopulationGrowth( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    20,
-                                    populationGrowth=1.1 )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               20,
+                               populationGrowth=1.1 )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -242,11 +242,11 @@ if "__main__" == __name__:
 
 
         def testFourChildren( self ):
-            ga = GeneticAlgorithms( objfunc1,
-                                    1,
-                                    32,
-                                    30,
-                                    numberChildren=4 )
+            ga = GA.Optimizer( objfunc1,
+                               1,
+                               32,
+                               30,
+                               numberChildren=4 )
             ga.run( 20 )
             genome, param, bestFit = ga.bestFit
             self.assertTrue( bestFit > 0.99 )
@@ -259,32 +259,32 @@ if "__main__" == __name__:
 
         def testErrorConditions1( self ):
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        [32],
-                                        30 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   [32],
+                                   30 )
             except ValueError:
                 self.assertTrue( False )
             try:
-                ga = GeneticAlgorithms( self.objfunc2chromosomes,
-                                        2,
-                                        32,
-                                        30 )
+                ga = GA.Optimizer( self.objfunc2chromosomes,
+                                   2,
+                                   32,
+                                   30 )
             except ValueError as e:
                 self.assertTrue( False )
             try:
-                ga = GeneticAlgorithms( self.objfunc2chromosomes,
-                                        2,
-                                        [32],
-                                        30 )
+                ga = GA.Optimizer( self.objfunc2chromosomes,
+                                   2,
+                                   [32],
+                                   30 )
                 self.assertTrue( False )
             except ValueError as e:
                 pass
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        [32,32],
-                                        30 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   [32,32],
+                                   30 )
                 self.assertTrue( False )
             except ValueError:
                 pass
@@ -293,32 +293,32 @@ if "__main__" == __name__:
 
         def testErrorConditions2( self ):
             try:
-                ga = GeneticAlgorithms( tsp,
-                                        1,
-                                        5,
-                                        30,
-                                        pmx=True,
-                                        alleleAlphabet=float )
+                ga = GA.Optimizer( tsp,
+                                   1,
+                                   5,
+                                   30,
+                                   pmx=True,
+                                   alleleAlphabet=float )
                 self.assertTrue( False )
             except ValueError:
                 pass
             try:
-                ga = GeneticAlgorithms( tsp,
-                                        1,
-                                        5,
-                                        30,
-                                        pmx=True,
-                                        numberChildren=4 )
+                ga = GA.Optimizer( tsp,
+                                   1,
+                                   5,
+                                   30,
+                                   pmx=True,
+                                   numberChildren=4 )
                 self.assertTrue( False )
             except ValueError:
                 pass
             try:
-                ga = GeneticAlgorithms( tsp,
-                                        1,
-                                        5,
-                                        30,
-                                        pmx=True,
-                                        chromosomeSets=2 )
+                ga = GA.Optimizer( tsp,
+                                   1,
+                                   5,
+                                   30,
+                                   pmx=True,
+                                   chromosomeSets=2 )
                 self.assertTrue( False )
             except ValueError:
                 pass
@@ -327,11 +327,11 @@ if "__main__" == __name__:
 
         def testErrorConditions3( self ):
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        32,
-                                        30,
-                                        chromosomeSets=3 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   32,
+                                   30,
+                                   chromosomeSets=3 )
                 self.assertTrue( False )
             except ValueError:
                 pass
@@ -340,30 +340,30 @@ if "__main__" == __name__:
 
         def testErrorConditions4( self ):
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        32,
-                                        30,
-                                        alleleAlphabet=3 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   32,
+                                   30,
+                                   alleleAlphabet=3 )
                 self.assertTrue( False )
             except ValueError:
                 pass
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        32,
-                                        30,
-                                        alleleAlphabet=int )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   32,
+                                   30,
+                                   alleleAlphabet=int )
                 self.assertTrue( False )
             except ValueError:
                 pass
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        32,
-                                        30,
-                                        alleleAlphabet=float,
-                                        chromosomeSets=2 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   32,
+                                   30,
+                                   alleleAlphabet=float,
+                                   chromosomeSets=2 )
                 self.assertTrue( False )
             except ValueError:
                 pass
@@ -372,11 +372,11 @@ if "__main__" == __name__:
 
         def testErrorConditions5( self ):
             try:
-                ga = GeneticAlgorithms( objfunc1,
-                                        1,
-                                        32,
-                                        30,
-                                        fitnessScale=0.9 )
+                ga = GA.Optimizer( objfunc1,
+                                   1,
+                                   32,
+                                   30,
+                                   fitnessScale=0.9 )
                 self.assertTrue( False )
             except ValueError:
                 pass
@@ -393,7 +393,7 @@ if "__main__" == __name__:
         helpText = \
 """
 Synopsis:
-    python3 unitTest.py <flag>
+    python3 test_GA.py <flag>
 where flag can be -h or --help to print this help information, as well as -d or 
 --demo to start the interactive demo program.  If no flag is given, the program 
 executes its unit test.
@@ -628,7 +628,7 @@ executes its unit test.
 
     def demo():
         """!
-        @brief Interactive demo for GeneticAlgorithms.
+        @brief Interactive demo for GA.Optimizer.
         """
 
         # default values
@@ -654,7 +654,7 @@ executes its unit test.
         pmx = False
         hook = animate
 
-        decoder = GeneticAlgorithms.genericDecoder
+        decoder = GA.Optimizer.genericDecoder
 
         print( "\n\nDefault values given in parentheses can be accepted by "
                "hitting 'enter'.\n" )
@@ -685,7 +685,7 @@ executes its unit test.
             pMutation = 0.2
             fitnessScale = None
         elif objfunc == pwd:
-            alleleAlphabet = GeneticAlgorithms.characterAlphabet
+            alleleAlphabet = GA.Optimizer.characterAlphabet
             alleleAlphabetStr = "characterAlphabet"
             pwd.pwd = input( "Enter password to guess ------------- > " )
             chromosomeLengths = len( pwd.pwd )
@@ -743,11 +743,11 @@ executes its unit test.
             elif string and (string == "bool" or string == "binary"):
                 string = "[0,1]"
             elif string and string == "alphaAlphabet":
-                string = "GeneticAlgorithms.alphaAlphabet"
+                string = "GA.Optimizer.alphaAlphabet"
             elif string and string == "alnumAlphabet":
-                string = "GeneticAlgorithms.alnumAlphabet"
+                string = "GA.Optimizer.alnumAlphabet"
             elif string and string == "characterAlphabet":
-                string = "GeneticAlgorithms.characterAlphabet"
+                string = "GA.Optimizer.characterAlphabet"
             if string:
                 try:
                     alleleAlphabet = eval( string )
@@ -838,27 +838,27 @@ executes its unit test.
             threaded = bool( string )
 
 
-        ga = GeneticAlgorithms( objfunc,
-                                numberChromosomes,
-                                chromosomeLengths,
-                                populationSize,
-                                decoder=decoder,
-                                alleleAlphabet=alleleAlphabet,
-                                pmx=pmx,
-                                pCrossover=pCrossover,
-                                pMutation=pMutation,
-                                pInversion=pInversion,
-                                populationGrowth=populationGrowth,
-                                overpopulation=overpopulation,
-                                chromosomeSets=chromosomeSets,
-                                fitnessScale=fitnessScale,
-                                monogamous=monogamous,
-                                numberChildren=numberChildren,
-                                bestImmortal=bestImmortal,
-                                floatSigma=floatSigma,
-                                floatSigmaAdapt=floatSigmaAdapt,
-                                hook=hook,
-                                threaded=threaded )
+        ga = GA.Optimizer( objfunc,
+                           numberChromosomes,
+                           chromosomeLengths,
+                           populationSize,
+                           decoder=decoder,
+                           alleleAlphabet=alleleAlphabet,
+                           pmx=pmx,
+                           pCrossover=pCrossover,
+                           pMutation=pMutation,
+                           pInversion=pInversion,
+                           populationGrowth=populationGrowth,
+                           overpopulation=overpopulation,
+                           chromosomeSets=chromosomeSets,
+                           fitnessScale=fitnessScale,
+                           monogamous=monogamous,
+                           numberChildren=numberChildren,
+                           bestImmortal=bestImmortal,
+                           floatSigma=floatSigma,
+                           floatSigmaAdapt=floatSigmaAdapt,
+                           hook=hook,
+                           threaded=threaded )
 
         ga.run( maxGenerations )
 
@@ -894,7 +894,7 @@ executes its unit test.
             plt.subplot( 2, 1, 2 )
             plt.plot( xs, y1, y2 )
             plt.legend( ["max","mean"], loc="lower right" )
-            print( "\nType 'q' to quit" )
+            print( "\nClose plot window to quit" )
             plt.show()
 
         return 0
@@ -904,7 +904,7 @@ executes its unit test.
         """!
         @brief Main Program - Unit Test and Demo
 
-        Unit test for GeneticAlgorithms class and demo for its use and function.
+        Unit test for GA.Optimizer class and demo for its use and function.
         """
 
         try:
@@ -915,7 +915,7 @@ executes its unit test.
         except IndexError:
             pass
 
-        unittest.main()
+        return unittest.main()
 
 
     sys.exit( int( main() or 0 ) )

@@ -1,9 +1,9 @@
-# Python Implementation: GeneticAlgorithms.
+# Python Implementation: Optimizer.
 # -*- coding: utf-8 -*-
 ##
-# @file       GeneticAlgorithms.py
+# @file       Optimizer.py
 #
-# @version    1.1.1
+# @version    2.0.0
 #
 # @par Purpose
 # Class to implement Genetic Algorithms using genes taking on values of settable
@@ -27,7 +27,7 @@
 # @b Overview
 # @par
 #
-# The class GeneticAlgorithms from this package implements a set of well-known
+# The class GOptimizer from this package implements a set of well-known
 # Genetic Algorithms (GAs), in particular those propagated by Goldberg [1] for
 # biallelic (binary) and triallelic (ternary) chromosomes and Schwefel [2] for
 # those containing floating point numbers as the alphabet of their genes.  Those
@@ -198,7 +198,7 @@
 # so only within a relatively narrow limit.  If the sequence length (the number
 # of cities) becomes much larger than 20, GAs will perform poorly.
 #
-# The constructor of the class GeneticAlgorithms provides a number of sensible
+# The constructor of the class GOptimizer provides a number of sensible
 # defaults for most of the parameters that should probably be tried first unless
 # there are good reasons not to use them.
 #
@@ -222,7 +222,8 @@
 #   Mon Sep 16 2019 | Ekkehard Blanz | added character alphabets and separated
 #                   |                | demo from unit test
 #   Thu Oct 10 2019 | Ekkehard Blanz | improved unit test
-#   Sun Nov 06 2019 | Ekkehard Blanz | extraced Genotype as separate module
+#   Sun Nov 06 2022 | Ekkehard Blanz | extracted Genotype as separate module
+#   Wed Nov 30 2022 | Ekkehard Blanz | renamed main class to Optimizer
 #                   |                |
 
 
@@ -230,7 +231,7 @@ import multiprocessing
 import copy
 from threading import Thread
 import numpy as np
-from Genotype import Genotype
+from GeneticAlgorithms.Genotype import Genotype
 
 
 class _ThreadWithReturnValue( Thread ):
@@ -268,7 +269,7 @@ class _ThreadWithReturnValue( Thread ):
 
 
 
-class GeneticAlgorithms( object ):
+class Optimizer( object ):
     """!
     @brief Genetic Algorithms (GA) optimizer for arbitrary objective functions.
     """
@@ -1226,7 +1227,7 @@ class GeneticAlgorithms( object ):
         The keys into these dictionaries are: "mean", "variance", "min", "max",
         "crossovers", "mutations", and "divorcerate".  Lists of individual
         statistics key can be obtained via [s[key] for s in ga.statistics] where
-        ga is a GeneticAlgorithms object.
+        ga is a GeneticAlgorithms.Optimizer object.
 
         It is worth noting that these statistics are computed BEFORE the
         selection of the fittest took place (as they are needed to select them).

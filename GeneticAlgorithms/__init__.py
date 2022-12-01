@@ -3,7 +3,7 @@
 ##
 # @file       __init__.py
 #
-# @version    1.1.1
+# @version    2.0.0
 #
 """!
 @par Purpose
@@ -24,7 +24,8 @@ This is Python 3 code!
 #      Date         | Author         | Modification
 #   ----------------+----------------+------------------------------------------
 #   Sun Nov 06 2022 | Ekkehard Blanz | created
+#   Wed Nov 30 2022 | Ekkehard Blanz | renamed main class to Optimizer
 #                   |                |
 
-from .GeneticAlgorithms import GeneticAlgorithms
-from .Genotype import Genotype
+from GeneticAlgorithms.Optimizer import Optimizer
+from GeneticAlgorithms.Genotype import Genotype

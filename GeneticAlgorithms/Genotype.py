@@ -3,12 +3,12 @@
 ##
 # @file       Genotype.py
 #
-# @version    1.1.1
+# @version    2.0.0
 #
 # @par Purpose
 # Class to implement the genotype used in Genetic Algorithms including genome 
 # and its properties and fitness of the corresponding phenotype in a given
-# environment provided by the objective function.  This class is for use by
+# environment provided by the objective function.  This class is for use by a
 # user-provided decoder, which receives an instance of this class as formal
 # parameter.
 #
@@ -29,6 +29,7 @@
 #  -----------------+----------------+------------------------------------------
 #   Tue Aug 20 2019 | Ekkehard Blanz | created
 #   Sun Nov 06 2022 | Ekkehard Blanz | extracted fromm GeneticAlgorithms.py
+#   Wed Nov 30 2022 | Ekkehard Blanz | renamed main class to Optimizer
 #                   |                |
 #
 

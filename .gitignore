@@ -1,0 +1,44 @@
+#
+# .gitignore Implementation
+#
+# Version   : 2.1.0
+#
+# Purpose   : Define all files to be ignored by git
+#
+# Comments  :
+#
+# Known Bugs: none
+#
+# Author    : W. Ekkehard Blanz <Ekkehard.Blanz@gmail.com> (C) 2013-2019
+#
+# Copyright : See COPYING file that comes with this distribution
+#
+# File history:
+#
+#     Date          | Author            | Modification
+#   ----------------+-------------------+---------------------------------------
+#   Sun Apr 14 2013 | W. Ekkehard Blanz | Rev 1.20 created from primitive
+#   Tue Apr 30 2013 | W. Ekkehard Blanz | Added COPYING and GPL
+#   Fri May 03 2013 | W. Ekkehard Blanz | removed COPYING again
+#   Thu Oct 10 2013 | W. Ekkehard Blanz | added __pycache__
+#   Thu Oct 31 2013 | W. Ekkehard Blanz | added *.modified
+#   Thu Mar 06 2014 | W. Ekkehard Blanz | added shared libraries
+#   Thu Feb 23 2017 | W. Ekkehard Blanz | added *.ilg and *.ind
+#   Fri Sep 01 2017 | W. Ekkehard Blanz | added Windows-specific files
+#   Wed Feb 14 2018 | W. Ekkehard Blanz | added more Windows-specific files
+#   Fri Jan 11 2019 | W. Ekkehard Blanz | added more Windows-specific files
+#   Tue Oct 27 2026 | W. Ekkehard Blanz | only the patterns specific to this
+#                   |                   | repository - all others are in the
+#                   |                   | global ~/.gitignore (with Claude)
+#                   |                   |
+#
+
+
+# Everything that is ignored in all repositories is in the global ignore file
+# ~/.gitignore (git config --global core.excludesFile ~/.gitignore) - this
+# file only lists what is specific to this repository.
+
+# These are the project-specific files and directories to exclude
+GoldbergCode
+SchwefelCode
+Makefile
